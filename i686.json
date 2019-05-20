@@ -1,0 +1,20 @@
+{
+    "llvm-target": "i686-unknown-none-gnu",
+    "arch": "x86",
+    "vendor": "unknown",
+    "os": "none",
+    "env": "gnu",
+
+    "data-layout": "e-m:e-p:32:32-f64:32:64-f80:32-n8:16:32-S128",
+    "target-endian": "little",
+    "target-pointer-width": "32",
+    "target-c-int-width": "32",
+    "max-atomic-width": 64,
+
+    "linker-flavor": "ld.lld",
+    "linker": "rust-lld",
+
+    "code-model": "kernel",
+    "executables": false,
+    "disable-redzone": true
+}
