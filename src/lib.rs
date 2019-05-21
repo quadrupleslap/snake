@@ -7,6 +7,7 @@ use core::mem;
 use spin::Mutex;
 use pic8259_simple::ChainedPics;
 
+mod game;
 #[macro_use]
 mod print;
 
@@ -55,7 +56,7 @@ unsafe fn load_idt() {
 extern "x86-interrupt" fn double_fault(_: *const c_void) {}
 
 extern "x86-interrupt" fn timer_interrupt(_: *const c_void) {
-    // print!("TODO: Timer interrupt.\n");
+    print!("TODO: Timer interrupt.\n");
 
     unsafe {
         PICS.lock().notify_end_of_interrupt(0x20);
@@ -63,9 +64,7 @@ extern "x86-interrupt" fn timer_interrupt(_: *const c_void) {
 }
 
 extern "x86-interrupt" fn keyboard_interrupt(_: *const c_void) {
-    let code = unsafe {
-        x86::io::inb(0x60)
-    };
+    let code = unsafe { x86::io::inb(0x60) };
 
     print!("TODO: Keyboard interrupt: {}.\n", code);
 
