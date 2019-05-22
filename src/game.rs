@@ -1,44 +1,37 @@
-#![allow(dead_code)]//TODO: Remove.
-
 use core::ops;
 
-type Position = [usize; 2];
+pub type Position = [usize; 2];
 
-struct Game {
+pub struct Game {
     /// The game board.
-    board: Board,
+    pub board: Board,
     /// The blue player.
-    blue: Player,
+    pub blue: Player,
     /// The red player.
-    red: Player,
+    pub red: Player,
     /// The time for which the current state has been active.
-    time: usize,
+    pub time: usize,
     /// The current state.
-    state: State,
+    pub state: State,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum State {
-    /// [Space] → Countdown
+pub enum State {
     Title,
-    /// 3 → 2 → 1 → Main
     Countdown(usize),
-    /// [P] → Pause, End → Death
     Main,
-    /// End → Countdown
     Death,
-    /// [P] → Main, [Q] → Title
     Paused,
 }
 
-struct Player {
-    alive: bool,
-    score: u32,
-    direction: Direction,
-    pos: Position,
+pub struct Player {
+    pub alive: bool,
+    pub score: u32,
+    pub direction: Direction,
+    pub pos: Position,
 }
 
-struct Board {
+pub struct Board {
     grid: [[Cell; 50]; 25],
 }
 
@@ -51,7 +44,7 @@ pub enum Direction {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Cell {
+pub enum Cell {
     Empty,
     Red,
     Blue,
@@ -60,9 +53,9 @@ enum Cell {
 impl Game {
     pub fn new() -> Self {
         Self {
-            board: Board::new([12, 16], [12, 33]),
-            blue: Player::new([12, 16], Direction::Right),
-            red: Player::new([12, 33], Direction::Left),
+            board: Board::new(),
+            blue: Player::new(),
+            red: Player::new(),
             time: 0,
             state: State::Title,
         }
@@ -125,13 +118,27 @@ impl Game {
                 }
             }
             State::Death => {
-                //TODO: Animate the death.
-                self.set_state(State::Countdown(3));
+                if self.time >= 20 {
+                    self.clear_board();
+                    self.set_state(State::Countdown(3));
+                }
             }
             State::Paused => {
                 // Do nothing.
             }
         }
+    }
+
+    fn clear_board(&mut self) {
+        self.board = Board::new();
+
+        self.blue.alive = true;
+        self.blue.direction = Direction::Right;
+        self.blue.pos = [12, 16];
+
+        self.red.alive = true;
+        self.red.direction = Direction::Left;
+        self.red.pos = [12, 33];
     }
 
     /// Press an arrow key.
@@ -148,6 +155,7 @@ impl Game {
     /// Press the start button.
     pub fn start(&mut self) {
         if self.state != State::Title { return }
+        self.clear_board();
         self.set_state(State::Countdown(3));
     }
 
@@ -163,7 +171,9 @@ impl Game {
     /// Press the quit button.
     pub fn quit(&mut self) {
         if let State::Paused { .. } = self.state {
-            self.state = State::Title;
+            self.red.score = 0;
+            self.blue.score = 0;
+            self.set_state(State::Title);
         }
     }
 
@@ -174,21 +184,18 @@ impl Game {
 }
 
 impl Board {
-    fn new(blue: Position, red: Position) -> Self {
-        let mut board = Self { grid: [[Cell::Empty; 50]; 25] };
-        board[blue] = Cell::Blue;
-        board[red] = Cell::Red;
-        board
+    fn new() -> Self {
+        Self { grid: [[Cell::Empty; 50]; 25] }
     }
 }
 
 impl Player {
-    fn new(pos: Position, direction: Direction) -> Self {
+    fn new() -> Self {
         Self {
             alive: true,
             score: 0,
-            direction,
-            pos,
+            direction: Direction::Up,
+            pos: [0, 0],
         }
     }
 
