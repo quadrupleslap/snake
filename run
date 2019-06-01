@@ -5,7 +5,7 @@ ISODIR=$(mktemp -d)
 cargo xbuild --target i686.json --release
 cd target/i686/release
 nasm -f elf -o start.o ../../../start.asm
-ld -m elf_i386 -T ../../../linker.ld -o kernel start.o libsnake.a
+ld -m elf_i386 -T ../../../linker.ld -o kernel start.o libsnake.a --gc-sections
 
 mkdir -p "$ISODIR/boot/grub"
 cp kernel "$ISODIR/boot/kernel"

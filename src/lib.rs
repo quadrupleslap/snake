@@ -3,7 +3,7 @@
 
 use lazy_static::lazy_static;
 use core::ffi::c_void;
-use core::{mem, slice};
+use core::mem;
 use game::{Direction, Game};
 use spin::Mutex;
 use pic8259_simple::ChainedPics;
@@ -26,8 +26,8 @@ lazy_static! {
 
     static ref GAME: Mutex<Game> = Mutex::new(Game::new());
 
-    static ref SCREEN: Mutex<&'static mut [u16]> = Mutex::new(unsafe {
-        slice::from_raw_parts_mut(0xB8000 as _, 80 * 25)
+    static ref SCREEN: Mutex<&'static mut [[u16; 80]; 25]> = Mutex::new(unsafe {
+        &mut *(0xB8000 as *mut [[u16; 80]; 25])
     });
 }
 
@@ -37,13 +37,14 @@ static PICS: Mutex<ChainedPics> = Mutex::new(unsafe {
 
 fn print(color: u16, y0: usize, x0: usize, s: &str) {
     let mut screen = SCREEN.lock();
-    let (mut x, mut y) = (x0, y0);
+    let mut x = x0;
+    let mut y = y0;
     for &c in s.as_bytes() {
         if c == b'\n' {
             y += 1;
             x = x0;
         } else {
-            screen[80*y + x] = color | c as u16;
+            screen[y][x] = color | c as u16;
             x += 1;
         }
     }
@@ -55,18 +56,18 @@ fn print_score(y: usize, mut x: usize, mut score: u32) {
     let start = x - 10;
 
     if score == 0 {
-        screen[80*y + x] = WHITE | 0x30;
+        screen[y][x] = WHITE | 0x30;
         x -= 1;
     } else {
         while score != 0 {
-            screen[80*y + x] = WHITE | 0x30 | (score % 10) as u16;
+            screen[y][x] = WHITE | 0x30 | (score % 10) as u16;
             x -= 1;
             score /= 10;
         }
     }
 
     while x != start {
-        screen[80*y + x] = WHITE | 0x20;
+        screen[y][x] = WHITE | 0x20;
         x -= 1;
     }
 }
@@ -87,11 +88,11 @@ pub extern fn start() {
     // Set things up so that we start receiving interrupts.
 
     unsafe {
-        load_idt();
+        enable_interrupts();
     }
 }
 
-unsafe fn load_idt() {
+unsafe fn enable_interrupts() {
     // Tell the computer where to find the interrupt table.
 
     x86::dtables::lidt(&x86::dtables::DescriptorTablePointer {
@@ -134,7 +135,7 @@ extern "x86-interrupt" fn timer_interrupt(_: *const c_void) {
 
             for y in 0..25 {
                 for x in 0..50 {
-                    screen[80*y + x] = match game.board[[y, x]] {
+                    screen[y][x] = match game.board[[y, x]] {
                         game::Cell::Blue => 0x1020,
                         game::Cell::Red => 0x4020,
                         game::Cell::Empty => 0x0220,
@@ -142,8 +143,8 @@ extern "x86-interrupt" fn timer_interrupt(_: *const c_void) {
                 }
             }
 
-            screen[80*game.blue.pos[0] + game.blue.pos[1]] = 0x1020;
-            screen[80*game.red.pos[0] + game.red.pos[1]] = 0x4020;
+            screen[game.blue.pos[0]][game.blue.pos[1]] = 0x1020;
+            screen[game.red.pos[0]][game.red.pos[1]] = 0x4020;
         },
         game::State::Death => {
             let (screen, color) = match (game.blue.alive, game.red.alive) {
