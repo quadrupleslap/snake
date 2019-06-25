@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Snake?</title>
+<script src="v86.js"></script>
+<style>
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        background-color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+<div id="screen">
+    <div style="white-space: pre; font: 1.5vw monospace; line-height: 1.5vw;"></div>
+    <canvas style="display: none;"></canvas>
+</div>
+<script>
+var emulator = new V86Starter({
+    memory_size: 32 * 1024 * 1024,
+    vga_memory_size: 2 * 1024 * 1024,
+    screen_container: document.getElementById('screen'),
+    bios: { url: 'seabios.bin' },
+    vga_bios: { url: 'vgabios.bin' },
+    cdrom: { url: 'disk.iso' },
+    autostart: true,
+});
+</script>
